@@ -65,6 +65,7 @@ jobs:
         cd boringssl
         cmake -S . -B build_${{ matrix.abi }} \
           -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
           -DANDROID_ABI=${{ matrix.abi }} \
           -DANDROID_PLATFORM=android-21 \
           -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake \
@@ -99,6 +100,7 @@ jobs:
         cd boringssl
         cmake -S . -B build_${{ matrix.sdk }}_${{ matrix.arch }} \
           -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
           -DCMAKE_OSX_SYSROOT=${{ matrix.sdk }} \
           -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} \
           -DBUILD_TESTING=OFF \
@@ -131,6 +133,7 @@ jobs:
         cd boringssl
         cmake -S . -B build_${{ matrix.arch }} \
           -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
           -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} \
           -DBUILD_TESTING=OFF \
           -GNinja
@@ -164,6 +167,7 @@ jobs:
         cd boringssl
         cmake -S . -B build_${{ matrix.arch }} \
           -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
           -DBUILD_TESTING=OFF \
           -GNinja
 
