@@ -56,7 +56,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: lib-windows-${{ matrix.arch }}
-        path: boringssl/build/Release/*.lib
+        path: boringssl/build/**/*.lib
 
   build-unix:
     name: ${{ matrix.os-name }} / ${{ matrix.arch-name }}
@@ -163,10 +163,14 @@ jobs:
         # Copy libraries into structured folders
         # Duyệt qua các folder tmp_artifacts/lib-* và copy vào folder đích tương ứng
         for dir in tmp_artifacts/lib-*; do
+          [ -d "$dir" ] || continue
           platform=$(basename "$dir" | sed 's/lib-//')
           mkdir -p "boringssl-universal/lib/$platform"
-          find "$dir" -name "*.a" -o -name "*.lib" -exec cp {} "boringssl-universal/lib/$platform/" \;
+          find "$dir" \( -name "*.a" -o -name "*.lib" \) -exec cp -v {} "boringssl-universal/lib/$platform/" \;
         done
+
+        echo "Final structure:"
+        ls -R boringssl-universal/
 
         zip -r boringssl-universal.zip boringssl-universal/
 
