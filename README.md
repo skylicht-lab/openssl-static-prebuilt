@@ -14,5 +14,21 @@ This repository provides automated, prebuilt static libraries for **BoringSSL** 
 - **Configurations:** Release
 - **Artifacts:** Static libraries (`.a`) built with the Android NDK.
 
+### iOS
+- **SDKs:** `iphoneos`, `iphonesimulator`
+- **Architectures:** `arm64`
+- **Configurations:** Release
+- **Artifacts:** Static libraries (`.a`)
+
+### macOS
+- **Architectures:** `arm64`
+- **Configurations:** Release
+- **Artifacts:** Static libraries (`.a`)
+
+### Linux
+- **Architectures:** `x64`
+- **Configurations:** Release
+- **Artifacts:** Static libraries (`.a`)
+
 ## Purpose
 The goal of this project is to provide ready-to-use binaries for BoringSSL, allowing developers to easily integrate it into their projects without the need to set up complex build environments.
