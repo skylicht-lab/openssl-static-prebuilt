@@ -29,7 +29,7 @@ jobs:
           path: boringssl/include/
 
   build-windows:
-    name: Windows / ${{ matrix.arch }}
+    name: windows / ${{ matrix.arch }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -66,10 +66,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            os-name: Linux
+            os-name: linux
             arch-name: x64
           - os: macos-latest
-            os-name: MacOS
+            os-name: macos
             arch-name: arm64
     steps:
     - uses: actions/checkout@v4
@@ -94,7 +94,7 @@ jobs:
         path: boringssl/build/**/*.a
 
   build-android:
-    name: Android / ${{ matrix.abi }}
+    name: android / ${{ matrix.abi }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -118,7 +118,7 @@ jobs:
         path: boringssl/build/**/*.a
 
   build-ios:
-    name: iOS / ${{ matrix.sdk }}
+    name: ios / ${{ matrix.sdk }}
     runs-on: macos-latest
     strategy:
       fail-fast: false

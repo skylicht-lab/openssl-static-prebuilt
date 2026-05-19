@@ -43,14 +43,6 @@ jobs:
         cd boringssl
         cmake --build ./PrjVisualStudio --config ${{ matrix.build_type }}
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: boringssl-windows-${{ matrix.arch }}-${{ matrix.build_type }}
-        retention-days: 1
-        path: |
-          boringssl/PrjVisualStudio/${{ matrix.build_type }}/*.lib
-
   build-android:
     name: Android / ${{ matrix.abi }}
     runs-on: ubuntu-latest
@@ -83,14 +75,6 @@ jobs:
       run: |
         cd boringssl
         cmake --build build_${{ matrix.abi }}
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: boringssl-android-${{ matrix.abi }}
-        retention-days: 1
-        path: |
-          boringssl/build_${{ matrix.abi }}/**/*.a
 
   build-ios:
     name: iOS / ${{ matrix.sdk }} / ${{ matrix.arch }}
@@ -125,14 +109,6 @@ jobs:
         cd boringssl
         cmake --build build_${{ matrix.sdk }}_${{ matrix.arch }}
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: boringssl-ios-${{ matrix.sdk }}-${{ matrix.arch }}
-        retention-days: 1
-        path: |
-          boringssl/build_${{ matrix.sdk }}_${{ matrix.arch }}/**/*.a
-
   build-macos:
     name: MacOS / ${{ matrix.arch }}
     runs-on: macos-latest
@@ -163,14 +139,6 @@ jobs:
       run: |
         cd boringssl
         cmake --build build_${{ matrix.arch }}
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: boringssl-macos-${{ matrix.arch }}
-        retention-days: 1
-        path: |
-          boringssl/build_${{ matrix.arch }}/**/*.a
 
   build-linux:
     name: Linux / ${{ matrix.arch }}
@@ -203,11 +171,3 @@ jobs:
       run: |
         cd boringssl
         cmake --build build_${{ matrix.arch }}
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: boringssl-linux-${{ matrix.arch }}
-        retention-days: 1
-        path: |
-          boringssl/build_${{ matrix.arch }}/**/*.a
