@@ -99,20 +99,12 @@ jobs:
         path: boringssl/build/**/*.a
 
   build-android:
-    name: android / ${{ matrix.abi }}
+    name: android / ${{ matrix.arch-name }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - abi: armeabi-v7a
-            arch-name: armeabi-v7
-          - abi: arm64-v8a
-            arch-name: arm64-v8
-          - abi: x86
-            arch-name: x86
-          - abi: x86_64
-            arch-name: x86_64
+        arch-name: [armeabi-v7a, arm64-v8a, x86, x86_64]
     steps:
     - uses: actions/checkout@v4
       with:
@@ -122,7 +114,7 @@ jobs:
     - name: Configure & Build
       run: |
         cd boringssl
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=${{ matrix.abi }} -DANDROID_PLATFORM=android-21 -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake -DBUILD_TESTING=OFF -GNinja
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=${{ matrix.arch-name }} -DANDROID_PLATFORM=android-21 -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake -DBUILD_TESTING=OFF -GNinja
         cmake --build build
     - name: Upload Libs
       uses: actions/upload-artifact@v4
