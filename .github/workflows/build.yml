@@ -110,7 +110,7 @@ jobs:
         cmake --build build_${{ matrix.sdk }}_${{ matrix.arch }}
 
   build-macos:
-    name: MacOS / ${{ matrix.arch }}
+    name: macOS / ${{ matrix.arch }}
     runs-on: macos-latest
 
     strategy:
