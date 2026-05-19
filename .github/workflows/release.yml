@@ -1,0 +1,180 @@
+name: Release BoringSSL Universal
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for the release'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  # Job này chỉ để upload headers 1 lần duy nhất
+  upload-headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Upload Headers
+        uses: actions/upload-artifact@v4
+        with:
+          name: headers
+          path: boringssl/include/
+
+  build-windows:
+    name: Windows / ${{ matrix.arch }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, x86]
+        include:
+          - arch: x64
+            cmake_arch: x64
+          - arch: x86
+            cmake_arch: Win32
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Set up NASM
+      uses: ilammy/setup-nasm@v1
+    - name: Configure & Build
+      shell: cmd
+      run: |
+        cd boringssl
+        cmake -S . -B ./build -G "Visual Studio 17 2022" -A ${{ matrix.cmake_arch }} -DBUILD_TESTING=OFF
+        cmake --build ./build --config Release
+    - name: Upload Libs
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib-windows-${{ matrix.arch }}
+        path: boringssl/build/Release/*.lib
+
+  build-unix:
+    name: ${{ matrix.os-name }} / ${{ matrix.arch-name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            os-name: Linux
+            arch-name: x64
+          - os: macos-latest
+            os-name: MacOS
+            arch-name: arm64
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install Ninja
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update && sudo apt-get install -y ninja-build
+        else
+          brew install ninja
+        fi
+    - name: Configure & Build
+      run: |
+        cd boringssl
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -GNinja
+        cmake --build build
+    - name: Upload Libs
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib-${{ matrix.os-name }}-${{ matrix.arch-name }}
+        path: boringssl/build/**/*.a
+
+  build-android:
+    name: Android / ${{ matrix.abi }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [armeabi-v7a, arm64-v8a, x86, x86_64]
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install Ninja
+      run: sudo apt-get install -y ninja-build
+    - name: Configure & Build
+      run: |
+        cd boringssl
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=${{ matrix.abi }} -DANDROID_PLATFORM=android-21 -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake -DBUILD_TESTING=OFF -GNinja
+        cmake --build build
+    - name: Upload Libs
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib-android-${{ matrix.abi }}
+        path: boringssl/build/**/*.a
+
+  build-ios:
+    name: iOS / ${{ matrix.sdk }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [iphoneos, iphonesimulator]
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install Ninja
+      run: brew install ninja
+    - name: Configure & Build
+      run: |
+        cd boringssl
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_SYSROOT=${{ matrix.sdk }} -DCMAKE_OSX_ARCHITECTURES=arm64 -DBUILD_TESTING=OFF -GNinja
+        cmake --build build
+    - name: Upload Libs
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib-ios-${{ matrix.sdk }}
+        path: boringssl/build/**/*.a
+
+  create-universal-release:
+    name: Create Universal Release
+    needs: [upload-headers, build-windows, build-unix, build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: tmp_artifacts
+
+    - name: Structure and Zip
+      run: |
+        mkdir -p boringssl-universal/include
+        mkdir -p boringssl-universal/lib
+
+        # Copy headers
+        cp -r tmp_artifacts/headers/* boringssl-universal/include/
+
+        # Copy libraries into structured folders
+        # Duyệt qua các folder tmp_artifacts/lib-* và copy vào folder đích tương ứng
+        for dir in tmp_artifacts/lib-*; do
+          platform=$(basename "$dir" | sed 's/lib-//')
+          mkdir -p "boringssl-universal/lib/$platform"
+          find "$dir" -name "*.a" -o -name "*.lib" -exec cp {} "boringssl-universal/lib/$platform/" \;
+        done
+
+        zip -r boringssl-universal.zip boringssl-universal/
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: boringssl-universal.zip
+        tag_name: ${{ github.event.inputs.tag_name }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
