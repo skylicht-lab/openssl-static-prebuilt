@@ -29,22 +29,26 @@ jobs:
           path: boringssl/include/
 
   build-windows:
-    name: windows / ${{ matrix.arch-name }} / ${{ matrix.build-type }}
+    name: windows / ${{ matrix.runtime.name }} / ${{ matrix.build_type.name }} / ${{ matrix.arch.name }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        arch-name: [x64, x86]
-        build-type: [debug, release]
-        include:
-          - arch-name: x64
-            cmake_arch: x64
-          - arch-name: x86
-            cmake_arch: Win32
-          - build-type: debug
+        runtime:
+          - name: md
+            cmake_msvc_runtime: MultiThreaded$<$<CONFIG:Debug>:Debug>DLL
+          - name: mt
+            cmake_msvc_runtime: MultiThreaded$<$<CONFIG:Debug>:Debug>
+        build_type:
+          - name: debug
             cmake_config: Debug
-          - build-type: release
+          - name: release
             cmake_config: Release
+        arch:
+          - name: x64
+            cmake_arch: x64
+          - name: x86
+            cmake_arch: Win32
     steps:
     - uses: actions/checkout@v4
       with:
@@ -55,13 +59,13 @@ jobs:
       shell: cmd
       run: |
         cd boringssl
-        cmake -S . -B ./build -G "Visual Studio 17 2022" -A ${{ matrix.cmake_arch }} -DBUILD_TESTING=OFF
-        cmake --build ./build --config ${{ matrix.cmake_config }}
+        cmake -S . -B ./build_${{ matrix.runtime.name }}_${{ matrix.build_type.name }}_${{ matrix.arch.name }} -G "Visual Studio 17 2022" -A ${{ matrix.arch.cmake_arch }} -DBUILD_TESTING=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY="${{ matrix.runtime.cmake_msvc_runtime }}"
+        cmake --build ./build_${{ matrix.runtime.name }}_${{ matrix.build_type.name }}_${{ matrix.arch.name }} --config ${{ matrix.build_type.cmake_config }}
     - name: Upload Libs
       uses: actions/upload-artifact@v4
       with:
-        name: lib.windows.${{ matrix.build-type }}.${{ matrix.arch-name }}
-        path: boringssl/build/**/*.lib
+        name: lib.windows.${{ matrix.runtime.name }}.${{ matrix.build_type.name }}.${{ matrix.arch.name }}
+        path: boringssl/build_${{ matrix.runtime.name }}_${{ matrix.build_type.name }}_${{ matrix.arch.name }}/**/*.lib
 
   build-unix:
     name: ${{ matrix.os-name }} / ${{ matrix.arch-name }}
@@ -171,7 +175,7 @@ jobs:
 
         # Copy libraries into structured folders
         # Artifact names follow the pattern: lib.<path.to.folder>
-        # e.g., lib.windows.debug.x64 -> windows/debug/x64
+        # e.g., lib.windows.md.debug.x64 -> windows/md/debug/x64
         #       lib.android.arm64-v8  -> android/arm64-v8
         for dir in tmp_artifacts/lib.*; do
           [ -d "$dir" ] || continue
