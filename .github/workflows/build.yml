@@ -40,11 +40,16 @@ jobs:
     - name: Set up NASM
       uses: ilammy/setup-nasm@v1
 
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: boringssl/go.mod
+
     - name: Configure CMake
       shell: cmd
       run: |
         cd boringssl
-        cmake -S . -B ./build_${{ matrix.runtime.name }}_${{ matrix.build_type.name }}_${{ matrix.arch.name }} -G "Visual Studio 17 2022" -A ${{ matrix.arch.cmake_arch }} -DBUILD_TESTING=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY="${{ matrix.runtime.cmake_msvc_runtime }}"
+        cmake -S . -B ./build_${{ matrix.runtime.name }}_${{ matrix.build_type.name }}_${{ matrix.arch.name }} -G "Visual Studio 17 2022" -A ${{ matrix.arch.cmake_arch }} -DBUILD_TESTING=OFF -DBORINGSSL_PREFIX=SKYLICHT -DCMAKE_MSVC_RUNTIME_LIBRARY="${{ matrix.runtime.cmake_msvc_runtime }}"
 
     - name: Build
       shell: cmd
@@ -69,6 +74,11 @@ jobs:
     - name: Install Ninja
       run: sudo apt-get install -y ninja-build
 
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: boringssl/go.mod
+
     - name: Configure CMake
       run: |
         cd boringssl
@@ -79,6 +89,7 @@ jobs:
           -DANDROID_PLATFORM=android-21 \
           -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake \
           -DBUILD_TESTING=OFF \
+          -DBORINGSSL_PREFIX=SKYLICHT \
           -GNinja
 
     - name: Build
@@ -104,6 +115,11 @@ jobs:
     - name: Install Ninja
       run: brew install ninja
 
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: boringssl/go.mod
+
     - name: Configure CMake
       run: |
         cd boringssl
@@ -113,6 +129,7 @@ jobs:
           -DCMAKE_OSX_SYSROOT=${{ matrix.sdk }} \
           -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} \
           -DBUILD_TESTING=OFF \
+          -DBORINGSSL_PREFIX=SKYLICHT \
           -GNinja
 
     - name: Build
@@ -137,6 +154,11 @@ jobs:
     - name: Install Ninja
       run: brew install ninja
 
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: boringssl/go.mod
+
     - name: Configure CMake
       run: |
         cd boringssl
@@ -145,6 +167,7 @@ jobs:
           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
           -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} \
           -DBUILD_TESTING=OFF \
+          -DBORINGSSL_PREFIX=SKYLICHT \
           -GNinja
 
     - name: Build
@@ -171,6 +194,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ninja-build
 
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: boringssl/go.mod
+
     - name: Configure CMake
       run: |
         cd boringssl
@@ -178,6 +206,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
           -DBUILD_TESTING=OFF \
+          -DBORINGSSL_PREFIX=SKYLICHT \
           -GNinja
 
     - name: Build
